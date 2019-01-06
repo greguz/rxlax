@@ -18,19 +18,24 @@ describe("rxlax", () => {
 
     await from(fill(new Array(length), "x"))
       .pipe(
-        rxlax(concurrency, data => {
-          calls++;
-          jobs++;
-          return new Promise<string>((resolve, reject) => {
-            if (jobs > concurrency) {
-              return reject(new Error("nooo"));
-            }
-            setTimeout(() => {
-              jobs--;
-              resolve(data);
-            }, 10);
-          });
-        })
+        rxlax(
+          data => {
+            calls++;
+            jobs++;
+            return new Promise<string>((resolve, reject) => {
+              if (jobs > concurrency) {
+                return reject(new Error("nooo"));
+              }
+              setTimeout(() => {
+                jobs--;
+                resolve(data);
+              }, 10);
+            });
+          },
+          {
+            concurrency
+          }
+        )
       )
       .pipe(mergeAll())
       .toPromise();
