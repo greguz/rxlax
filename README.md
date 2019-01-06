@@ -1,6 +1,6 @@
 # rxlax
 
-[![npm version](https://badge.fury.io/js/rxlax.svg)](https://badge.fury.io/js/rxlax) [![Dependencies Status](https://david-dm.org/greguz/rxlax.svg)](https://david-dm.org/greguz/rxlax.svg)
+[![npm version](https://badge.fury.io/js/rxlax.svg)](https://badge.fury.io/js/rxlax) [![Build Status](https://travis-ci.com/greguz/rxlax.svg?branch=master)](https://travis-ci.com/greguz/rxlax) [![Coverage Status](https://coveralls.io/repos/github/greguz/rxlax/badge.svg?branch=master)](https://coveralls.io/github/greguz/rxlax?branch=master) [![Dependencies Status](https://david-dm.org/greguz/rxlax.svg)](https://david-dm.org/greguz/rxlax.svg)
 
 Make Rx.js to relax a bit.
 
