@@ -33,3 +33,9 @@ const results = await getBigAndFastFiringObservable()
   .pipe(toArray())
   .toPromise();
 ```
+
+## Roadmap
+
+- Improve test coverage
+- Improve docs
+- 1.0.0 stable release
