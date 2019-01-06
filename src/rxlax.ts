@@ -2,6 +2,7 @@ import { from, Observable, ObservableInput } from "rxjs";
 import * as os from "os";
 
 import { defaultQueue } from "./defaultQueue";
+import { Errors } from "./Errors";
 import { Options } from "./Options";
 
 function onEnd<T>(callback: (err?: any) => void) {
@@ -78,7 +79,7 @@ export function rxlax<S, T>(
         } else if (errors.length === 1) {
           subscriber.error(errors[0]);
         } else {
-          subscriber.error(errors);
+          subscriber.error(new Errors(errors));
         }
       }
 
