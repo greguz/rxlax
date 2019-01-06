@@ -21,12 +21,14 @@ function getBigAndFastFiringObservable() {
   // Return a fast-firing observable, like an array or a file read
 }
 
-async function slowAsyncProcess(data) {
-  // Process the input data, like a slow DB update
+function slowAsyncProcess(data) {
+  // Process slowly the input data
+  return new Promise(resolve => setTimeout(resolve, 1000));
 }
 
 const results = await getBigAndFastFiringObservable()
-  .pipe(rxlax(10, data => slowAsyncProcess(data)))
+  // run max 10 times slowAsyncProcess() until end
+  .pipe(rxlax(slowAsyncProcess, { concurrency: 10 }))
   .pipe(mergeAll())
   .pipe(toArray())
   .toPromise();

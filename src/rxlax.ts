@@ -1,22 +1,8 @@
 import { from, Observable, ObservableInput } from "rxjs";
+import * as os from "os";
 
-import { Queue } from "./Queue";
-
-function buildDefaultQueue<T>(): Queue<T> {
-  const store: T[] = [];
-
-  return {
-    async shift() {
-      return store.shift();
-    },
-    async push(entry: T) {
-      store.push(entry);
-    },
-    async clear() {
-      store.splice(0, store.length);
-    }
-  };
-}
+import { defaultQueue } from "./defaultQueue";
+import { Options } from "./Options";
 
 function onEnd<T>(callback: (err?: any) => void) {
   return function operator(source: Observable<T>) {
@@ -38,25 +24,38 @@ function onEnd<T>(callback: (err?: any) => void) {
   };
 }
 
-export function rxlax<A, B>(
-  concurrency: number,
-  mapper: (entry: A) => ObservableInput<B>
-) {
-  // Ensure positive int number as concurrency
-  if (!Number.isInteger(concurrency) || concurrency <= 0) {
-    throw new Error("Concurrency must be a positive integer");
-  }
+function defaultConcurrency() {
+  const cpus = os.cpus().length;
+  return cpus > 1 ? cpus - 1 : cpus;
+}
 
+/**
+ * Make Rx.js to relax a bit
+ */
+export function rxlax<S, T>(
+  mapper: (entry: S) => ObservableInput<T>,
+  options: Options<S> = {}
+) {
   // Ensure mapper type
   if (typeof mapper !== "function") {
     throw new Error("Mapper is not a function");
   }
 
+  // Get configured concurrency
+  const concurrency = options.concurrency
+    ? options.concurrency
+    : defaultConcurrency();
+
+  // Ensure positive int number as concurrency
+  if (!Number.isInteger(concurrency) || concurrency <= 0) {
+    throw new Error("Concurrency must be a positive integer");
+  }
+
   // Return the operator implemetation
-  return (source: Observable<A>) => {
-    return new Observable<Observable<B>>(subscriber => {
+  return (source: Observable<S>) => {
+    return new Observable<Observable<T>>(subscriber => {
       // Build the execution queue
-      const queue = buildDefaultQueue<A>();
+      const queue = options.queue ? options.queue() : defaultQueue<S>();
 
       // All collected errors during this execution
       const errors: any[] = [];
@@ -99,10 +98,10 @@ export function rxlax<A, B>(
       let jobs: number = 0;
 
       // True when the source has finished
-      let hasEnd: boolean = false;
+      let hasEnded: boolean = false;
 
       // Start a new job util
-      function jobStart(entry: A) {
+      function jobStart(entry: S) {
         jobs++;
         subscriber.next(from(mapper(entry)).pipe(onEnd(jobEnd)));
       }
@@ -125,7 +124,7 @@ export function rxlax<A, B>(
             .then(entry => {
               if (entry !== undefined) {
                 jobStart(entry);
-              } else if (hasEnd === true && jobs <= 0) {
+              } else if (hasEnded === true && jobs <= 0) {
                 cleanAndExit();
               }
             })
@@ -146,14 +145,14 @@ export function rxlax<A, B>(
           }
         },
         sourceError => {
-          hasEnd = true;
+          hasEnded = true;
           pushError(sourceError);
           if (jobs <= 0) {
             cleanAndExit();
           }
         },
         () => {
-          hasEnd = true;
+          hasEnded = true;
           if (jobs <= 0) {
             cleanAndExit();
           }
