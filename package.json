@@ -5,8 +5,12 @@
   "main": "dist/index.js",
   "types": "types/index.d.ts",
   "scripts": {
-    "check": "tsc --noEmit",
-    "test": "mocha -r ts-node/register src/**/*.spec.ts",
+    "test:ts": "tsc --noEmit",
+    "test:lint": "tslint -c tslint.json src/**/*.ts",
+    "test:unit": "mocha -r ts-node/register src/**/*.spec.ts",
+    "test:coverage": "nyc mocha --require ts-node/register --require source-map-support/register --recursive **/*.spec.ts",
+    "test": "npm run test:ts && npm run test:lint && npm run test:coverage",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "types": "rimraf types && tsc --emitDeclarationOnly --declaration --declarationDir types",
     "build": "rimraf dist && tsc",
     "prepublishOnly": "npm run test && npm run types && npm run build"
@@ -25,11 +29,14 @@
     "@types/mocha": "^5.2.5",
     "@types/node": "^10.12.18",
     "chai": "^4.2.0",
+    "coveralls": "^3.0.2",
     "lodash": "^4.17.11",
     "mocha": "^5.2.0",
+    "nyc": "^13.1.0",
     "rimraf": "^2.6.2",
     "rxjs": "^6.3.3",
     "ts-node": "^7.0.1",
+    "tslint": "^5.12.0",
     "typescript": "^3.2.2"
   },
   "peerDependencies": {
@@ -45,5 +52,23 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/greguz/rxlax.git"
+  },
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "include": [
+      "src"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "**/*.spec.ts"
+    ],
+    "reporter": [
+      "html",
+      "text"
+    ],
+    "all": true
   }
 }
