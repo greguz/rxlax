@@ -125,18 +125,23 @@ export function rxlax<S, T>(
             .then(entry => {
               if (entry !== undefined) {
                 jobStart(entry);
-              } else if (hasEnded === true && jobs <= 0) {
+              } else if (hasEnded && jobs <= 0) {
                 cleanAndExit();
               }
             })
-            .catch(pushError);
+            .catch(queueError => {
+              pushError(queueError);
+              if (jobs <= 0) {
+                cleanAndExit();
+              }
+            });
         }
       }
 
       // Start data flow
       return source.subscribe(
         entry => {
-          // Keet firing jobs if there's no errors
+          // Keep firing jobs if there's no errors
           if (!hasErrors) {
             if (jobs >= concurrency) {
               queue.push(entry).catch(pushError);
