@@ -43,9 +43,10 @@ export function rxlax<S, T>(
   }
 
   // Get configured concurrency
-  const concurrency = options.concurrency
-    ? options.concurrency
-    : defaultConcurrency();
+  const concurrency =
+    options.concurrency !== undefined
+      ? options.concurrency
+      : defaultConcurrency();
 
   // Ensure positive int number as concurrency
   if (!Number.isInteger(concurrency) || concurrency <= 0) {
