@@ -1,5 +1,4 @@
 import { from, Observable, ObservableInput } from "rxjs";
-import * as os from "os";
 
 import { defaultQueue } from "./defaultQueue";
 import { Errors } from "./Errors";
@@ -25,11 +24,6 @@ function onEnd<T>(callback: (err?: any) => void) {
   };
 }
 
-function defaultConcurrency() {
-  const cpus = os.cpus().length;
-  return cpus > 1 ? cpus - 1 : cpus;
-}
-
 /**
  * Make Rx.js to relax a bit
  */
@@ -44,9 +38,7 @@ export function rxlax<S, T>(
 
   // Get configured concurrency
   const concurrency =
-    options.concurrency !== undefined
-      ? options.concurrency
-      : defaultConcurrency();
+    options.concurrency === undefined ? 16 : options.concurrency;
 
   // Ensure positive int number as concurrency
   if (!Number.isInteger(concurrency) || concurrency <= 0) {
