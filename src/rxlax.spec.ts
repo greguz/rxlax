@@ -5,6 +5,7 @@ import { from, Observable } from "rxjs";
 import { mergeAll } from "rxjs/operators";
 import { fill } from "lodash";
 
+import { defaultQueue } from "./defaultQueue";
 import { rxlax } from "./index";
 
 describe("rxlax", () => {
@@ -131,6 +132,76 @@ describe("rxlax", () => {
           if (error instanceof Error && error.message === "STOP") {
             done();
           } else {
+            done(error);
+          }
+        },
+        () => {
+          done(new Error("Done without errors"));
+        }
+      );
+  });
+
+  it("should handle queue.shift errors", done => {
+    const queue = defaultQueue<any>();
+    queue.shift = () => Promise.reject(new Error("STOP"));
+
+    from(fill(new Array(100), "x"))
+      .pipe(rxlax(wait(10), { queue: () => queue }))
+      .pipe(mergeAll())
+      .subscribe(
+        undefined,
+        error => {
+          if (error instanceof Error && error.message === "STOP") {
+            done();
+          } else {
+            done(error);
+          }
+        },
+        () => {
+          done(new Error("Done without errors"));
+        }
+      );
+  });
+
+  it("should handle queue.push errors", done => {
+    const queue = defaultQueue<any>();
+    queue.push = () => Promise.reject(new Error("STOP"));
+
+    from(fill(new Array(100), "x"))
+      .pipe(rxlax(wait(10), { queue: () => queue }))
+      .pipe(mergeAll())
+      .subscribe(
+        undefined,
+        error => {
+          if (error instanceof Error && error.message === "STOP") {
+            done();
+          } else {
+            done(error);
+          }
+        },
+        () => {
+          done(new Error("Done without errors"));
+        }
+      );
+  });
+
+  it("should handle queue.clear errors", done => {
+    const queue = defaultQueue<any>();
+    queue.clear = () => Promise.reject(new Error("STOP"));
+
+    from(fill(new Array(100), "x"))
+      .pipe(rxlax(wait(10), { queue: () => queue }))
+      .pipe(mergeAll())
+      .subscribe(
+        undefined,
+        error => {
+          if (error instanceof Error && error.message === "STOP") {
+            done();
+          } else {
+            for (const err of error.errors) {
+              console.log(err.toString());
+            }
+
             done(error);
           }
         },
