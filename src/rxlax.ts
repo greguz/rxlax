@@ -4,6 +4,16 @@ import { defaultQueue } from "./defaultQueue";
 import { Errors } from "./Errors";
 import { Options } from "./Options";
 
+function once(fn: (error?: any) => void): (error?: any) => void {
+  let called = false;
+  return (error?: any) => {
+    if (!called) {
+      called = true;
+      fn(error);
+    }
+  };
+}
+
 function onEnd<T>(callback: (err?: any) => void) {
   return function operator(source: Observable<T>) {
     return new Observable<T>(subscriber => {
@@ -65,6 +75,10 @@ export function rxlax<S, T>(
         hasErrors = errors.length > 0;
       }
 
+      // Ensure single error for queue#shift and queue#push methods
+      const onShiftError = once(pushError);
+      const onPushError = once(pushError);
+
       // Exit utility (final callback)
       function exit() {
         if (errors.length <= 0) {
@@ -76,15 +90,17 @@ export function rxlax<S, T>(
         }
       }
 
-      // End this execution and perform clean steps
-      function cleanAndExit() {
-        if (hasErrors) {
-          queue
-            .clear()
-            .catch(pushError)
-            .then(exit);
-        } else {
-          exit();
+      // Try to end this execution and perform clean steps
+      function tryToExit() {
+        if (jobs <= 0 && (hasErrors || hasEnded)) {
+          if (hasErrors) {
+            queue
+              .clear()
+              .catch(pushError)
+              .then(exit);
+          } else {
+            exit();
+          }
         }
       }
 
@@ -109,25 +125,17 @@ export function rxlax<S, T>(
 
         // Try to run another job if no errors
         if (hasErrors) {
-          if (jobs <= 0) {
-            cleanAndExit();
-          }
+          tryToExit();
         } else {
           queue
             .shift()
             .then(entry => {
               if (entry !== undefined) {
                 jobStart(entry);
-              } else if (hasEnded && jobs <= 0) {
-                cleanAndExit();
               }
             })
-            .catch(queueError => {
-              pushError(queueError);
-              if (jobs <= 0) {
-                cleanAndExit();
-              }
-            });
+            .catch(onShiftError)
+            .then(tryToExit);
         }
       }
 
@@ -137,7 +145,7 @@ export function rxlax<S, T>(
           // Keep firing jobs if there's no errors
           if (!hasErrors) {
             if (jobs >= concurrency) {
-              queue.push(entry).catch(pushError);
+              queue.push(entry).catch(onPushError);
             } else {
               jobStart(entry);
             }
@@ -146,15 +154,11 @@ export function rxlax<S, T>(
         sourceError => {
           hasEnded = true;
           pushError(sourceError);
-          if (jobs <= 0) {
-            cleanAndExit();
-          }
+          tryToExit();
         },
         () => {
           hasEnded = true;
-          if (jobs <= 0) {
-            cleanAndExit();
-          }
+          tryToExit();
         }
       );
     });
