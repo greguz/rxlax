@@ -6,6 +6,7 @@ import { mergeAll } from "rxjs/operators";
 import { fill } from "lodash";
 
 import { defaultQueue } from "./defaultQueue";
+import { Errors } from "./Errors";
 import { rxlax } from "./index";
 
 describe("rxlax", () => {
@@ -202,6 +203,30 @@ describe("rxlax", () => {
               console.log(err.toString());
             }
 
+            done(error);
+          }
+        },
+        () => {
+          done(new Error("Done without errors"));
+        }
+      );
+  });
+
+  it("should handle multiple errors", done => {
+    const queue = defaultQueue<any>();
+    queue.shift = () => Promise.reject(new Error("Shift error"));
+    queue.push = () => Promise.reject(new Error("Push error"));
+    queue.clear = () => Promise.reject(new Error("Clear error"));
+
+    from(fill(new Array(100), "x"))
+      .pipe(rxlax(wait(10), { queue: () => queue }))
+      .pipe(mergeAll())
+      .subscribe(
+        undefined,
+        error => {
+          if (error instanceof Errors && error.errors.length === 2) {
+            done();
+          } else {
             done(error);
           }
         },
