@@ -199,10 +199,6 @@ describe("rxlax", () => {
           if (error instanceof Error && error.message === "STOP") {
             done();
           } else {
-            for (const err of error.errors) {
-              console.log(err.toString());
-            }
-
             done(error);
           }
         },
