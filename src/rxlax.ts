@@ -67,6 +67,12 @@ export function rxlax<S, T>(
       // True when the errors array has entries
       let hasErrors = false;
 
+      // Currently active jobs count
+      let jobs: number = 0;
+
+      // True when the source has finished
+      let hasEnded: boolean = false;
+
       // Push error util
       function pushError(error: any) {
         if (error !== undefined) {
@@ -90,25 +96,20 @@ export function rxlax<S, T>(
         }
       }
 
+      // Perform clean step and exit (also ensure single call)
+      const cleanAndExit = once(() => {
+        queue
+          .clear()
+          .catch(pushError)
+          .then(exit);
+      });
+
       // Try to end this execution and perform clean steps
       function tryToExit() {
         if (jobs <= 0 && (hasErrors || hasEnded)) {
-          if (hasErrors) {
-            queue
-              .clear()
-              .catch(pushError)
-              .then(exit);
-          } else {
-            exit();
-          }
+          cleanAndExit();
         }
       }
-
-      // Currently active jobs count
-      let jobs: number = 0;
-
-      // True when the source has finished
-      let hasEnded: boolean = false;
 
       // Start a new job util
       function jobStart(entry: S) {
