@@ -8,7 +8,7 @@ This lib is useful to handle the [backpressure](https://nodejs.org/en/docs/guide
 While currently exist _other methods_ to handle this problem, I've found that these methods are not always suitable for all cases, or the resulting code is just too complicated to achieve the solution.
 This lib try to solve this problematic with just a simple operator.
 
-- Node.js >= 8.x
+- Node.js & Browser support
 - Rx.js 6.x
 - Zero dependencies
 - TypeScript support
