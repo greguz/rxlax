@@ -5,11 +5,15 @@
 Make Rx.js to relax a bit.
 
 This lib is useful to handle the [backpressure](https://nodejs.org/en/docs/guides/backpressuring-in-streams/) problem with Rx.js.
+While currently exist _other methods_ to handle this problem, I've found that these methods are not always suitable for all cases, or the resulting code is just too complicated to achieve the solution.
+This lib try to solve this problematic with just a simple operator.
 
 - Node.js >= 8.x
 - Rx.js 6.x
 - Zero dependencies
 - TypeScript support
+
+Technically this operator map the source data into an observable of the resulting data, so you have to use another operator like [mergeAll](https://rxjs-dev.firebaseapp.com/api/operators/mergeAll) to retrieve the resulting data.
 
 ## Example
 
@@ -40,9 +44,15 @@ const results = await getBigAndFastFiringObservable()
   .toPromise();
 ```
 
+## Mapper
+
+The first argument is a map function, that takes a stream element as argument and returns an [observable input](https://rxjs-dev.firebaseapp.com/api/index/type-alias/ObservableInput).
+This is the **async** process that have to be limited according to the
+speed of the data source.
+
 ## Options
 
-The second argument of **rxlax** is the options.
+The second argument are the options.
 
 ```typescript
 interface Options<T> {
@@ -53,15 +63,15 @@ interface Options<T> {
 
 ### Concurrency
 
-Number of concurrent jobs.
+Number of concurrent jobs, default to [16](https://nodejs.org/api/stream.html#stream_constructor_new_stream_writable_options).
 
 ### Custom queue
 
 By default, all queued data is saved in memory,
 tecnically a simple array,
-but if the processed data is enormous,
+but if the data to precess is enormous,
 or the processing time is very long,
-it is recommend to use a custom queue to buffer the data to be processed.
+it is recommend to use a custom queue to buffer the data.
 
 ```typescript
 interface Queue<T> {
@@ -75,12 +85,12 @@ A custom queue have to implement 3 methods used internally by **rxlax**, all of 
 
 #### shift(): Promise<T | undefined>
 
-Removes from the queue and return the first queued element, _undefined_ if no elements are present.
+Removes the first element from the queue and returns that removed element.
 
 #### push(entry: T): Promise<any>
 
-Save a new element into the queue.
+Add one element to the end of the queue.
 
 #### clear(): Promise<any>
 
-Clear the queue. This method is fired when the process throw for any reason.
+Clear the queue. This method is always fired just before the end of the overall process.
