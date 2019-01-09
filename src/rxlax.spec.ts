@@ -250,4 +250,50 @@ describe("rxlax", () => {
         }
       );
   });
+
+  it("should not start more jobs on errors", done => {
+    const observable = new Observable(subscriber => {
+      let i = 0;
+      const timer = setInterval(() => {
+        subscriber.next(i++);
+        subscriber.next(i++);
+        subscriber.next(i++);
+        subscriber.next(i++);
+        subscriber.next(i++);
+      }, 10);
+      return function unsubscribe() {
+        clearInterval(timer);
+      };
+    });
+
+    observable
+      .pipe(
+        rxlax(
+          index =>
+            new Promise((resolve, reject) => {
+              setTimeout(() => {
+                if (index === 2) {
+                  reject(new Error("STOP"));
+                } else {
+                  resolve(index);
+                }
+              }, 20);
+            })
+        )
+      )
+      .pipe(mergeAll())
+      .subscribe(
+        undefined,
+        error => {
+          if (error instanceof Error && error.message === "STOP") {
+            done();
+          } else {
+            done(error);
+          }
+        },
+        () => {
+          done(new Error("Done without errors"));
+        }
+      );
+  });
 });
