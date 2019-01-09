@@ -14,6 +14,9 @@ function once(fn: (error?: any) => void): (error?: any) => void {
   };
 }
 
+/**
+ * Swallow errors and call the callback (async) at the end
+ */
 function onEnd<T>(callback: (err?: any) => void) {
   return function operator(source: Observable<T>) {
     return new Observable<T>(subscriber => {
@@ -22,12 +25,12 @@ function onEnd<T>(callback: (err?: any) => void) {
           subscriber.next(entry);
         },
         err => {
-          subscriber.error(err);
-          callback(err);
+          subscriber.complete();
+          process.nextTick(callback, err);
         },
         () => {
           subscriber.complete();
-          callback();
+          process.nextTick(callback);
         }
       );
     });
@@ -74,7 +77,7 @@ export function rxlax<S, T>(
       let hasEnded: boolean = false;
 
       // Push error util
-      function pushError(error: any) {
+      function handleError(error: any) {
         if (error !== undefined) {
           errors.push(error);
         }
@@ -82,8 +85,8 @@ export function rxlax<S, T>(
       }
 
       // Ensure single error for queue#shift and queue#push methods
-      const onShiftError = once(pushError);
-      const onPushError = once(pushError);
+      const onShiftError = once(handleError);
+      const onPushError = once(handleError);
 
       // Exit utility (final callback)
       function exit() {
@@ -100,7 +103,7 @@ export function rxlax<S, T>(
       const cleanAndExit = once(() => {
         queue
           .clear()
-          .catch(pushError)
+          .catch(handleError)
           .then(exit);
       });
 
@@ -122,7 +125,7 @@ export function rxlax<S, T>(
         jobs--;
 
         // Handle possible error
-        pushError(jobError);
+        handleError(jobError);
 
         // Try to run another job if no errors
         if (hasErrors) {
@@ -154,7 +157,7 @@ export function rxlax<S, T>(
         },
         sourceError => {
           hasEnded = true;
-          pushError(sourceError);
+          handleError(sourceError);
           tryToExit();
         },
         () => {
