@@ -3,8 +3,9 @@ import { Queue } from "./Queue";
 export function defaultQueue<T>(): Queue<T> {
   const store: T[] = [];
 
-  function shift() {
-    return Promise.resolve(store.shift());
+  function clear() {
+    store.splice(0, store.length);
+    return Promise.resolve();
   }
 
   function push(entry: T) {
@@ -12,14 +13,13 @@ export function defaultQueue<T>(): Queue<T> {
     return Promise.resolve();
   }
 
-  function clear() {
-    store.splice(0, store.length);
-    return Promise.resolve();
+  function shift() {
+    return Promise.resolve(store.shift());
   }
 
   return {
-    shift,
+    clear,
     push,
-    clear
+    shift
   };
 }
