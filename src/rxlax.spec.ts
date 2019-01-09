@@ -63,7 +63,7 @@ describe("rxlax", () => {
     expect(calls).to.be.equal(length);
   });
 
-  it("should handle job errors", done => {
+  it("should handle single job error", done => {
     from([0])
       .pipe(rxlax(data => Promise.reject(new Error("STOP"))))
       .pipe(mergeAll())
@@ -71,6 +71,25 @@ describe("rxlax", () => {
         undefined,
         error => {
           if (error instanceof Error && error.message === "STOP") {
+            done();
+          } else {
+            done(error);
+          }
+        },
+        () => {
+          done(new Error("Done without errors"));
+        }
+      );
+  });
+
+  it("should handle multiple job errors", done => {
+    from([0, 1, 2, 3, 4])
+      .pipe(rxlax(data => Promise.reject(new Error("STOP"))))
+      .pipe(mergeAll())
+      .subscribe(
+        undefined,
+        error => {
+          if (error instanceof Errors && error.errors.length === 5) {
             done();
           } else {
             done(error);
