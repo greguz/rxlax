@@ -26,11 +26,11 @@ function onEnd<T>(callback: (err?: any) => void) {
         },
         err => {
           subscriber.complete();
-          process.nextTick(callback, err);
+          setImmediate(callback, err);
         },
         () => {
           subscriber.complete();
-          process.nextTick(callback);
+          setImmediate(callback);
         }
       );
     });
