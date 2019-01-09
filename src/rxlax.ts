@@ -1,7 +1,6 @@
 import { from, Observable, ObservableInput } from "rxjs";
 
 import { defaultQueue } from "./defaultQueue";
-import { Errors } from "./Errors";
 import { Options } from "./Options";
 
 function once(fn: (error?: any) => void): (error?: any) => void {
@@ -12,6 +11,12 @@ function once(fn: (error?: any) => void): (error?: any) => void {
       fn(error);
     }
   };
+}
+
+function buildMultiError(errors: any[]) {
+  const error: any = new Error("Multiple errors detected");
+  error.errors = errors;
+  return error;
 }
 
 /**
@@ -95,7 +100,7 @@ export function rxlax<S, T>(
         } else if (errors.length === 1) {
           subscriber.error(errors[0]);
         } else {
-          subscriber.error(new Errors(errors));
+          subscriber.error(buildMultiError(errors));
         }
       }
 

@@ -6,7 +6,6 @@ import { mergeAll } from "rxjs/operators";
 import { fill } from "lodash";
 
 import { defaultQueue } from "./defaultQueue";
-import { Errors } from "./Errors";
 import { rxlax } from "./index";
 
 describe("rxlax", () => {
@@ -89,7 +88,7 @@ describe("rxlax", () => {
       .subscribe(
         undefined,
         error => {
-          if (error instanceof Errors && error.errors.length === 5) {
+          if (Array.isArray(error.errors) && error.errors.length === 5) {
             done();
           } else {
             done(error);
@@ -239,7 +238,7 @@ describe("rxlax", () => {
       .subscribe(
         undefined,
         error => {
-          if (error instanceof Errors && error.errors.length === 2) {
+          if (Array.isArray(error.errors) && error.errors.length === 2) {
             done();
           } else {
             done(error);
