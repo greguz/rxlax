@@ -9,4 +9,8 @@ export interface Options<T> {
    * Use a custom queue to buffer the data to be processed, default to memory buffer
    */
   queue?: () => Queue<T>;
+  /**
+   * Enable custom error when more errors are collected
+   */
+  multiError?: boolean;
 }

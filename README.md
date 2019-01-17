@@ -94,3 +94,8 @@ Removes the first element from the queue and returns that removed element.
 #### clear(): Promise<any>
 
 Clear the queue. This method is always fired just before the end of the overall process.
+
+### Returns all errors
+
+If the option **multiError** is true, and more than one error are collected,
+the resulting error will be a custom instance whit an _errors_ property.

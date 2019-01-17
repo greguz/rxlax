@@ -97,7 +97,7 @@ export function rxlax<S, T>(
       function exit() {
         if (errors.length <= 0) {
           subscriber.complete();
-        } else if (errors.length === 1) {
+        } else if (errors.length === 1 || options.multiError !== true) {
           subscriber.error(errors[0]);
         } else {
           subscriber.error(buildMultiError(errors));
