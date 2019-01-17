@@ -1,6 +1,6 @@
 {
   "name": "rxlax",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Make Rx.js to relax a bit",
   "main": "dist/index.js",
   "types": "types/index.d.ts",
