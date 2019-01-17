@@ -83,7 +83,9 @@ describe("rxlax", () => {
 
   it("should handle multiple job errors", done => {
     from([0, 1, 2, 3, 4])
-      .pipe(rxlax(data => Promise.reject(new Error("STOP"))))
+      .pipe(
+        rxlax(data => Promise.reject(new Error("STOP")), { multiError: true })
+      )
       .pipe(mergeAll())
       .subscribe(
         undefined,
@@ -233,7 +235,7 @@ describe("rxlax", () => {
     queue.clear = () => Promise.reject(new Error("Clear error"));
 
     from(fill(new Array(100), "x"))
-      .pipe(rxlax(wait(10), { queue: () => queue }))
+      .pipe(rxlax(wait(10), { multiError: true, queue: () => queue }))
       .pipe(mergeAll())
       .subscribe(
         undefined,
